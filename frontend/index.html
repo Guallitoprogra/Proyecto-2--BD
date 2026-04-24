@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tienda Inventario y Ventas</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Tienda Inventario y Ventas</h1>
+        <p>Avance 60% - Proyecto 2 Bases de Datos</p>
+      </div>
+      <a class="export" href="http://localhost:5000/api/reportes/resumen-ventas.csv">Exportar CSV</a>
+    </header>
+
+    <main>
+      <section class="panel">
+        <div class="section-title">
+          <h2>Productos</h2>
+          <span>CRUD con categorias y proveedores</span>
+        </div>
+        <form id="product-form" class="grid-form">
+          <input type="hidden" id="product-id" />
+          <input id="product-name" placeholder="Nombre" required />
+          <input id="product-sku" placeholder="SKU" required />
+          <input id="product-price" placeholder="Precio" type="number" min="0.01" step="0.01" required />
+          <input id="product-cost" placeholder="Costo" type="number" min="0.01" step="0.01" required />
+          <input id="product-stock" placeholder="Stock" type="number" min="0" required />
+          <select id="product-category" required></select>
+          <select id="product-provider" required></select>
+          <button type="submit">Guardar producto</button>
+          <button type="button" id="clear-product">Limpiar</button>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Categoria</th>
+                <th>Proveedor</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="products-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">
+          <h2>Clientes</h2>
+          <span>Segundo CRUD requerido</span>
+        </div>
+        <form id="client-form" class="grid-form clients">
+          <input type="hidden" id="client-id" />
+          <input id="client-name" placeholder="Nombre" required />
+          <input id="client-nit" placeholder="NIT" required />
+          <input id="client-phone" placeholder="Telefono" required />
+          <input id="client-email" placeholder="Email" type="email" required />
+          <button type="submit">Guardar cliente</button>
+          <button type="button" id="clear-client">Limpiar</button>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>NIT</th>
+                <th>Telefono</th>
+                <th>Email</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="clients-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">
+          <h2>Registrar venta</h2>
+          <span>Transaccion con rollback si falla el stock</span>
+        </div>
+        <form id="sale-form" class="grid-form sale">
+          <select id="sale-client" required></select>
+          <input id="sale-employee" type="number" min="1" value="1" placeholder="ID empleado" required />
+          <select id="sale-product" required></select>
+          <input id="sale-qty" type="number" min="1" value="1" required />
+          <button type="submit">Vender</button>
+        </form>
+      </section>
+
+      <section class="panel reports">
+        <div class="section-title">
+          <h2>Reportes SQL</h2>
+          <span>JOIN, subqueries, agregaciones, CTE y VIEW</span>
+        </div>
+        <div class="report-grid">
+          <article>
+            <h3>Resumen de ventas (VIEW)</h3>
+            <div id="report-sales"></div>
+          </article>
+          <article>
+            <h3>Productos mas vendidos (GROUP BY/HAVING)</h3>
+            <div id="report-top"></div>
+          </article>
+          <article>
+            <h3>Clientes frecuentes (subquery IN)</h3>
+            <div id="report-clients"></div>
+          </article>
+          <article>
+            <h3>Stock critico (CTE)</h3>
+            <div id="report-stock"></div>
+          </article>
+          <article>
+            <h3>Productos sin ventas (NOT EXISTS)</h3>
+            <div id="report-no-sales"></div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
