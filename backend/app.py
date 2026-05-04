@@ -1,15 +1,22 @@
 import csv
+import hashlib
 import io
 import os
 from decimal import Decimal
+from functools import wraps
 
 import psycopg
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, session
 from flask_cors import CORS
 
 
 app = Flask(__name__)
-CORS(app)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
+CORS(app, supports_credentials=True)
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
@@ -44,6 +51,20 @@ def fetch_one(sql, params=None):
             return to_json(row) if row else None
 
 
+def login_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if not session.get("usuario"):
+            return jsonify({"error": "Debes iniciar sesion"}), 401
+        return view(*args, **kwargs)
+
+    return wrapped_view
+
+
+def password_hash(password):
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+
 @app.errorhandler(psycopg.Error)
 def handle_db_error(error):
     return jsonify({"error": "Error de base de datos", "detalle": str(error)}), 400
@@ -54,7 +75,49 @@ def health():
     return jsonify({"status": "ok"})
 
 
+@app.post("/api/auth/login")
+def login():
+    data = request.get_json(force=True)
+    usuario = data.get("usuario", "").strip()
+    password = data.get("password", "")
+    if not usuario or not password:
+        return jsonify({"error": "Usuario y password son obligatorios"}), 400
+
+    user = fetch_one(
+        """
+        SELECT id_usuario, usuario, nombre, password_hash
+        FROM usuarios
+        WHERE usuario = %s AND activo = TRUE;
+        """,
+        [usuario],
+    )
+    if not user or user["password_hash"] != password_hash(password):
+        return jsonify({"error": "Credenciales incorrectas"}), 401
+
+    session["usuario"] = {
+        "id_usuario": user["id_usuario"],
+        "usuario": user["usuario"],
+        "nombre": user["nombre"],
+    }
+    return jsonify({"usuario": session["usuario"]})
+
+
+@app.post("/api/auth/logout")
+def logout():
+    session.clear()
+    return jsonify({"ok": True})
+
+
+@app.get("/api/auth/me")
+def auth_me():
+    usuario = session.get("usuario")
+    if not usuario:
+        return jsonify({"usuario": None}), 401
+    return jsonify({"usuario": usuario})
+
+
 @app.get("/api/catalogos")
+@login_required
 def catalogos():
     return jsonify(
         {
@@ -69,6 +132,7 @@ def catalogos():
 
 
 @app.get("/api/productos")
+@login_required
 def listar_productos():
     sql = """
         SELECT
@@ -84,6 +148,7 @@ def listar_productos():
 
 
 @app.post("/api/productos")
+@login_required
 def crear_producto():
     data = request.get_json(force=True)
     required = ["nombre", "sku", "precio", "costo", "stock", "id_categoria", "id_proveedor"]
@@ -113,6 +178,7 @@ def crear_producto():
 
 
 @app.put("/api/productos/<int:product_id>")
+@login_required
 def actualizar_producto(product_id):
     data = request.get_json(force=True)
     sql = """
@@ -148,6 +214,7 @@ def actualizar_producto(product_id):
 
 
 @app.delete("/api/productos/<int:product_id>")
+@login_required
 def eliminar_producto(product_id):
     deleted = fetch_one(
         """
@@ -164,6 +231,7 @@ def eliminar_producto(product_id):
 
 
 @app.get("/api/clientes")
+@login_required
 def listar_clientes():
     return jsonify(
         fetch_all(
@@ -177,6 +245,7 @@ def listar_clientes():
 
 
 @app.post("/api/clientes")
+@login_required
 def crear_cliente():
     data = request.get_json(force=True)
     required = ["nombre", "nit", "telefono", "email"]
@@ -200,6 +269,7 @@ def crear_cliente():
 
 
 @app.put("/api/clientes/<int:client_id>")
+@login_required
 def actualizar_cliente(client_id):
     data = request.get_json(force=True)
     client = fetch_one(
@@ -223,6 +293,7 @@ def actualizar_cliente(client_id):
 
 
 @app.delete("/api/clientes/<int:client_id>")
+@login_required
 def eliminar_cliente(client_id):
     try:
         deleted = fetch_one(
@@ -242,6 +313,7 @@ def eliminar_cliente(client_id):
 
 
 @app.post("/api/ventas")
+@login_required
 def crear_venta():
     data = request.get_json(force=True)
     detalles = data.get("detalles", [])
@@ -317,6 +389,7 @@ def crear_venta():
 
 
 @app.get("/api/reportes/resumen-ventas")
+@login_required
 def resumen_ventas():
     return jsonify(
         fetch_all(
@@ -331,6 +404,7 @@ def resumen_ventas():
 
 
 @app.get("/api/reportes/productos-mas-vendidos")
+@login_required
 def productos_mas_vendidos():
     return jsonify(
         fetch_all(
@@ -353,6 +427,7 @@ def productos_mas_vendidos():
 
 
 @app.get("/api/reportes/clientes-frecuentes")
+@login_required
 def clientes_frecuentes():
     return jsonify(
         fetch_all(
@@ -375,6 +450,7 @@ def clientes_frecuentes():
 
 
 @app.get("/api/reportes/stock-critico")
+@login_required
 def stock_critico():
     return jsonify(
         fetch_all(
@@ -397,6 +473,7 @@ def stock_critico():
 
 
 @app.get("/api/reportes/productos-sin-ventas")
+@login_required
 def productos_sin_ventas():
     return jsonify(
         fetch_all(
@@ -415,6 +492,7 @@ def productos_sin_ventas():
 
 
 @app.get("/api/reportes/resumen-ventas.csv")
+@login_required
 def exportar_resumen_csv():
     rows = fetch_all(
         """

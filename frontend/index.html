@@ -10,10 +10,24 @@
     <header class="topbar">
       <div>
         <h1>Tienda Inventario y Ventas</h1>
-        <p>Avance 60% - Proyecto 2 Bases de Datos</p>
+        <p>Proyecto final - Bases de Datos 1</p>
       </div>
-      <a class="export" href="http://localhost:5000/api/reportes/resumen-ventas.csv">Exportar CSV</a>
+      <div class="session-bar">
+        <span id="session-name"></span>
+        <a class="export" href="http://localhost:5000/api/reportes/resumen-ventas.csv">Exportar CSV</a>
+        <button type="button" id="logout-button" class="secondary">Salir</button>
+      </div>
     </header>
+
+    <section id="login-screen" class="login-screen">
+      <form id="login-form" class="login-box">
+        <h2>Iniciar sesion</h2>
+        <input id="login-user" value="admin" placeholder="Usuario" autocomplete="username" required />
+        <input id="login-password" value="admin123" placeholder="Password" type="password" autocomplete="current-password" required />
+        <button type="submit">Entrar</button>
+        <p>Usuario de prueba: admin / admin123</p>
+      </form>
+    </section>
 
     <main>
       <section class="panel">

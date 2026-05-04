@@ -40,6 +40,14 @@ erDiagram
         date fecha_contratacion
     }
 
+    USUARIOS {
+        int id_usuario PK
+        varchar usuario
+        varchar nombre
+        varchar password_hash
+        boolean activo
+    }
+
     PRODUCTOS {
         int id_producto PK
         int id_categoria FK
@@ -77,6 +85,7 @@ erDiagram
 - PROVEEDORES(id_proveedor PK, nombre, telefono, email, ciudad)
 - CLIENTES(id_cliente PK, nombre, nit, telefono, email)
 - EMPLEADOS(id_empleado PK, nombre, puesto, fecha_contratacion)
+- USUARIOS(id_usuario PK, usuario, nombre, password_hash, activo)
 - PRODUCTOS(id_producto PK, id_categoria FK, id_proveedor FK, nombre, sku, precio, costo, stock, activo)
 - VENTAS(id_venta PK, id_cliente FK, id_empleado FK, fecha, total, estado)
 - DETALLE_VENTA(id_detalle PK, id_venta FK, id_producto FK, cantidad, precio_unitario, subtotal)
@@ -101,6 +110,7 @@ No se guardan dependencias transitivas innecesarias. El nombre de la categoria n
 - id_proveedor -> nombre, telefono, email, ciudad
 - id_cliente -> nombre, nit, telefono, email
 - id_empleado -> nombre, puesto, fecha_contratacion
+- id_usuario -> usuario, nombre, password_hash, activo
 - id_producto -> id_categoria, id_proveedor, nombre, sku, precio, costo, stock, activo
 - id_venta -> id_cliente, id_empleado, fecha, total, estado
 - id_detalle -> id_venta, id_producto, cantidad, precio_unitario, subtotal

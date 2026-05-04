@@ -3,6 +3,7 @@ const API = "http://localhost:5000/api";
 let products = [];
 let clients = [];
 let catalogos = { categorias: [], proveedores: [] };
+let currentUser = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,6 +17,7 @@ function toast(message, error = false) {
 async function api(path, options = {}) {
   const response = await fetch(`${API}${path}`, {
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     ...options,
   });
   const data = await response.json();
@@ -23,6 +25,47 @@ async function api(path, options = {}) {
     throw new Error(data.detalle || data.error || "Error inesperado");
   }
   return data;
+}
+
+function setLoggedIn(usuario) {
+  currentUser = usuario;
+  $("login-screen").classList.toggle("hidden", Boolean(usuario));
+  $("session-name").textContent = usuario ? `Sesion: ${usuario.nombre}` : "";
+}
+
+async function checkSession() {
+  try {
+    const data = await api("/auth/me");
+    setLoggedIn(data.usuario);
+    return true;
+  } catch {
+    setLoggedIn(null);
+    return false;
+  }
+}
+
+async function login(event) {
+  event.preventDefault();
+  try {
+    const data = await api("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        usuario: $("login-user").value,
+        password: $("login-password").value,
+      }),
+    });
+    setLoggedIn(data.usuario);
+    toast("Sesion iniciada");
+    await startApp();
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
+
+async function logout() {
+  await api("/auth/logout", { method: "POST", body: JSON.stringify({}) });
+  setLoggedIn(null);
+  toast("Sesion cerrada");
 }
 
 function optionList(rows, idKey, labelKey) {
@@ -208,42 +251,50 @@ async function deleteClient(id) {
 
 async function saveProduct(event) {
   event.preventDefault();
-  const id = $("product-id").value;
-  const body = {
-    nombre: $("product-name").value,
-    sku: $("product-sku").value,
-    precio: Number($("product-price").value),
-    costo: Number($("product-cost").value),
-    stock: Number($("product-stock").value),
-    id_categoria: Number($("product-category").value),
-    id_proveedor: Number($("product-provider").value),
-    activo: true,
-  };
-  await api(id ? `/productos/${id}` : "/productos", {
-    method: id ? "PUT" : "POST",
-    body: JSON.stringify(body),
-  });
-  clearProduct();
-  toast("Producto guardado");
-  await refresh();
+  try {
+    const id = $("product-id").value;
+    const body = {
+      nombre: $("product-name").value,
+      sku: $("product-sku").value,
+      precio: Number($("product-price").value),
+      costo: Number($("product-cost").value),
+      stock: Number($("product-stock").value),
+      id_categoria: Number($("product-category").value),
+      id_proveedor: Number($("product-provider").value),
+      activo: true,
+    };
+    await api(id ? `/productos/${id}` : "/productos", {
+      method: id ? "PUT" : "POST",
+      body: JSON.stringify(body),
+    });
+    clearProduct();
+    toast("Producto guardado");
+    await refresh();
+  } catch (error) {
+    toast(error.message, true);
+  }
 }
 
 async function saveClient(event) {
   event.preventDefault();
-  const id = $("client-id").value;
-  const body = {
-    nombre: $("client-name").value,
-    nit: $("client-nit").value,
-    telefono: $("client-phone").value,
-    email: $("client-email").value,
-  };
-  await api(id ? `/clientes/${id}` : "/clientes", {
-    method: id ? "PUT" : "POST",
-    body: JSON.stringify(body),
-  });
-  clearClient();
-  toast("Cliente guardado");
-  await refresh();
+  try {
+    const id = $("client-id").value;
+    const body = {
+      nombre: $("client-name").value,
+      nit: $("client-nit").value,
+      telefono: $("client-phone").value,
+      email: $("client-email").value,
+    };
+    await api(id ? `/clientes/${id}` : "/clientes", {
+      method: id ? "PUT" : "POST",
+      body: JSON.stringify(body),
+    });
+    clearClient();
+    toast("Cliente guardado");
+    await refresh();
+  } catch (error) {
+    toast(error.message, true);
+  }
 }
 
 async function saveSale(event) {
@@ -275,6 +326,15 @@ async function refresh() {
 }
 
 async function init() {
+  $("login-form").addEventListener("submit", login);
+  $("logout-button").addEventListener("click", logout);
+  if (!(await checkSession())) {
+    return;
+  }
+  await startApp();
+}
+
+async function startApp() {
   try {
     await loadCatalogos();
     await refresh();

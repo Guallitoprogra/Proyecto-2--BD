@@ -2,16 +2,17 @@
 
 Aplicacion web para gestionar productos, clientes, ventas e inventario de una tienda. El proyecto usa frontend, backend Flask, PostgreSQL y Docker Compose.
 
-## Estado del avance
+## Estado del proyecto
 
-Avance preparado para mostrar aproximadamente 60% del proyecto:
+Proyecto preparado para entrega final:
 
 - Docker Compose levanta base de datos, backend y frontend.
 - Base de datos relacional con llaves primarias, foraneas, restricciones `NOT NULL`, indices y una vista.
-- Datos de prueba realistas generados al iniciar PostgreSQL.
+- Datos de prueba generados al iniciar PostgreSQL con al menos 25 registros por tabla.
 - CRUD completo de productos y clientes desde la interfaz.
 - Registro de ventas con transaccion explicita: `BEGIN`, `COMMIT` y `ROLLBACK`.
 - Reportes visibles en la UI con `JOIN`, `GROUP BY`, `HAVING`, subqueries, `CTE` y `VIEW`.
+- Autenticacion con login/logout y sesion.
 - Exportacion CSV del reporte de ventas.
 
 ## Requisitos
@@ -38,6 +39,11 @@ docker compose up --build
 - Frontend: http://localhost:8080
 - Backend health check: http://localhost:5000/api/health
 
+4. Iniciar sesion en la aplicacion:
+
+- Usuario: `admin`
+- Password: `admin123`
+
 Las credenciales obligatorias para calificacion ya estan configuradas:
 
 - Usuario: `proy2`
@@ -61,6 +67,7 @@ Proyecto-2--BD/
 - Productos: crear, listar, editar y desactivar.
 - Clientes: crear, listar, editar y eliminar cuando no tienen ventas asociadas.
 - Ventas: registra una venta y descuenta stock dentro de una transaccion.
+- Autenticacion: login/logout con sesion de usuario.
 - Reportes:
   - Resumen de ventas desde `vw_resumen_ventas`.
   - Productos mas vendidos con agregaciones.
@@ -71,3 +78,10 @@ Proyecto-2--BD/
 ## Documentacion
 
 Ver [docs/diseno_base_datos.md](docs/diseno_base_datos.md) para el modelo relacional, diagrama ER en Mermaid y justificacion de normalizacion.
+
+## Checklist de rubrica
+
+- Diseno BD: diagrama ER, modelo relacional, normalizacion, DDL, datos e indices.
+- SQL: joins, subqueries, agregaciones, CTE, view y transaccion explicita visibles desde la app.
+- Aplicacion web: CRUD de 2 entidades, reportes, errores visibles y README funcional.
+- Avanzado: autenticacion con sesion y exportacion CSV.

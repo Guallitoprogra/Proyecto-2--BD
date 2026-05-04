@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS ventas;
 DROP TABLE IF EXISTS productos;
 DROP TABLE IF EXISTS clientes;
 DROP TABLE IF EXISTS empleados;
+DROP TABLE IF EXISTS usuarios;
 DROP TABLE IF EXISTS proveedores;
 DROP TABLE IF EXISTS categorias;
 
@@ -34,6 +35,14 @@ CREATE TABLE empleados (
     nombre VARCHAR(120) NOT NULL,
     puesto VARCHAR(80) NOT NULL,
     fecha_contratacion DATE NOT NULL
+);
+
+CREATE TABLE usuarios (
+    id_usuario SERIAL PRIMARY KEY,
+    usuario VARCHAR(60) NOT NULL UNIQUE,
+    nombre VARCHAR(120) NOT NULL,
+    password_hash VARCHAR(64) NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE productos (
@@ -115,6 +124,14 @@ SELECT
          WHEN n % 3 = 1 THEN 'Vendedor'
          ELSE 'Supervisor' END,
     DATE '2025-01-01' + (n * INTERVAL '7 days')
+FROM generate_series(1, 25) AS n;
+
+INSERT INTO usuarios (usuario, nombre, password_hash, activo)
+SELECT
+    CASE WHEN n = 1 THEN 'admin' ELSE 'usuario' || n END,
+    CASE WHEN n = 1 THEN 'Administrador de tienda' ELSE 'Usuario de prueba ' || n END,
+    '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9',
+    TRUE
 FROM generate_series(1, 25) AS n;
 
 INSERT INTO productos (id_categoria, id_proveedor, nombre, sku, precio, costo, stock, activo)
